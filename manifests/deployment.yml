@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: "akslabswkim-ea83"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "akslabswkim-ea83"
+  template:
+    metadata:
+      labels:
+        app: "akslabswkim-ea83"
+    spec:
+      containers:
+        - name: "akslabswkim-ea83"
+          image: "acraksswk.azurecr.io/akslabswkim"
+          ports:
+          - containerPort: 3000
