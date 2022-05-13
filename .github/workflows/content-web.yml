@@ -16,7 +16,7 @@ env:
   imageRepository: 'content-web'
   resourceGroupName: 'rg-akslab'
   containerRegistryName: 'acraksswk'
-  containerRegistry: 'acrakskdk.azurecr.io'
+  containerRegistry: 'acraksswk.azurecr.io'
   dockerfilePath: './content-web'
   tag: '${{ github.run_id  }}'
 
