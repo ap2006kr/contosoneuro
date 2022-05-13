@@ -1,0 +1,50 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: acraksswk.azurecr.io
+        username: ${{ secrets.acr_acraksswk_username }}
+        password: ${{ secrets.acr_acraksswk_password }}
+    
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/content-web" -f  "content-web/Dockerfile" -t acraksswk.azurecr.io/akslabswkim:${{ github.sha }} --label dockerfile-path=content-web/Dockerfile
+        docker push acraksswk.azurecr.io/akslabswkim:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      with:
+         kubeconfig: ${{ secrets.aks_akslabswkim_kubeConfig }}
+      id: login
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep akslabswkim9384 | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace akslabswkim9384`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: akslabswkim9384
+        container-registry-url: acraksswk.azurecr.io
+        container-registry-username: ${{ secrets.acr_acraksswk_username }}
+        container-registry-password: ${{ secrets.acr_acraksswk_password }}
+        secret-name: akslabswkimdockerauth
+       
+    - uses: azure/k8s-deploy@v1.2
+      with:
+        namespace: akslabswkim9384
+        manifests: |
+          manifests/deployment.yml
+          manifests/service.yml
+        images: |
+          acraksswk.azurecr.io/akslabswkim:${{ github.sha }}
+        imagepullsecrets: |
+          akslabswkimdockerauth
